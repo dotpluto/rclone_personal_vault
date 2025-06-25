@@ -1,0 +1,4 @@
+vault_db_file="/home/{{user_name}}/vault/vault.kdbx"
+if [ -e vault_db_file ]; then
+    stuff=$(sha512sum vault_db_file)
+fi

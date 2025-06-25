@@ -1,0 +1,39 @@
+- name: Ensure that rclone is installed
+  ansible.builtin.apt:
+    name: rclone
+# - name: |
+#     Checking if the mountpoint already exists.
+#   stat:
+#     path: "/home/{{user_name}}/vault"
+#   register: file_stat_output
+# - name: Ensure ~/vault directory exists
+#   ansible.builtin.file:
+#     path: "/home/{{user_name}}/vault"
+#     state: directory
+#     owner: "{{user_name}}"
+#     group: "{{user_name}}"
+#     mode: 0700
+#   when: file_stat_output.stat.exists == false or file_stat_output.stat.isdir == false
+# - name: Make sure /var/rclone directory exists
+#   ansible.builtin.file:
+#     path: /var/rclone
+#     state: directory
+#     owner: "{{user_name}}"
+#     group: "{{user_name}}"
+#     mode: 0744
+# - name: Copying vault file into place. It likely contains secrets so we only give access to the main user
+#   ansible.builtin.copy:
+#     src: rclone.conf
+#     dest: /var/rclone/
+#     owner: "{{user_name}}"
+#     group: "{{user_name}}"
+#     mode: 0600
+# - name: Templating service file
+#   ansible.builtin.template:
+#     src: vault.service.j2
+#     dest: /etc/systemd/system/vault.service
+#   register: install_template_result
+# - name: Reloading systemd stuff when service file changed
+#   ansible.builtin.systemd:
+#     daemon-reload: true
+#   when: install_template_result['changed'] == true

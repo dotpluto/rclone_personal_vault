@@ -1,0 +1,1 @@
+/usr/bin/rclone mount vault:vault /home/{{ user_name }}/vault --umask 0022 --vfs-cache-mode full --config /var/rclone/rclone.conf

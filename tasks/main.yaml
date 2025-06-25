@@ -1,67 +1,55 @@
+---
 - name: Ensuring rclone is installed
-  become: yes
+  become: true
   ansible.builtin.apt:
     name: rclone
+- name: Stopping mount if it's running
+  become: true
+  ansible.builtin.command:
+    cmd: "fusermount3 -u /home/{{ item }}/vault"
+  loop: "{{rclone_personal_vault_users}}"
+  ignore_errors: true
 - name: Ensuring mount points exist
-  become: yes
+  become: true
   ansible.builtin.file:
-    path: /home/{{item}}/vault
+    path: "/home/{{ item }}/vault"
     state: directory
     mode: "0700"
-    owner: "{{item}}"
-    group: "{{item}}"
-  loop: "{{rclone_personal_vault_users}}"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+  loop: "{{ rclone_personal_vault_users }}"
 - name: Making sure rclone_personal_vault group exists
-  become: yes
+  become: true
   ansible.builtin.group:
-    name: "{{rclone_personal_vault_group}}"
+    name: "{{ rclone_personal_vault_group }}"
     state: present
 - name: Making sure rclone_personal_vault_dir exists
-  become: yes
+  become: true
   ansible.builtin.file:
-    path: "{{rclone_personal_vault_dir}}"
+    path: "{{ rclone_personal_vault_dir }}"
     state: directory
     owner: root
-    group: "{{rclone_personal_vault_group}}"
+    group: "{{ rclone_personal_vault_group }}"
     mode: "0770"
 - name: Adding template service
-  become: yes
+  become: true
   ansible.builtin.template:
     src: rclone_personal_vault@.service.j2
     dest: /etc/systemd/system/rclone_personal_vault@.service
-# - name: |
-#     Checking if the mountpoint already exists.
-#   stat:
-#     path: "/home/{{user_name}}/vault"
-#   register: file_stat_output
-# - name: Ensure ~/vault directory exists
-#   ansible.builtin.file:
-#     path: "/home/{{user_name}}/vault"
-#     state: directory
-#     owner: "{{user_name}}"
-#     group: "{{user_name}}"
-#     mode: 0700
-#   when: file_stat_output.stat.exists == false or file_stat_output.stat.isdir == false
-# - name: Make sure /var/rclone directory exists
-#   ansible.builtin.file:
-#     path: /var/rclone
-#     state: directory
-#     owner: "{{user_name}}"
-#     group: "{{user_name}}"
-#     mode: 0744
-# - name: Copying vault file into place. It likely contains secrets so we only give access to the main user
-#   ansible.builtin.copy:
-#     src: rclone.conf
-#     dest: /var/rclone/
-#     owner: "{{user_name}}"
-#     group: "{{user_name}}"
-#     mode: 0600
-# - name: Templating service file
-#   ansible.builtin.template:
-#     src: vault.service.j2
-#     dest: /etc/systemd/system/vault.service
-#   register: install_template_result
-# - name: Reloading systemd stuff when service file changed
-#   ansible.builtin.systemd:
-#     daemon-reload: true
-#   when: install_template_result['changed'] == true
+    mode: "0777"
+- name: Make users able to share mount
+  become: true
+  ansible.builtin.lineinfile:
+    state: present
+    path: /etc/fuse.conf
+    line: "user_allow_other"
+- name: Reloading services
+  become: true
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+- name: Starting service for users
+  become: true
+  ansible.builtin.systemd_service:
+    state: restarted
+    name: rclone_personal_vault@{{ item }}.service
+  loop: "{{ rclone_personal_vault_users }}"

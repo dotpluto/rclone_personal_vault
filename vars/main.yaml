@@ -1,0 +1,2 @@
+rclone_personal_vault_dir: /var/rclone_personal_vault_dir
+rclone_personal_vault_group: rclone_personal_vault

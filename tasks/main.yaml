@@ -43,13 +43,35 @@
     state: present
     path: /etc/fuse.conf
     line: "user_allow_other"
+- name: Adding backup script to /usr/local/bin
+  become: true
+  ansible.builtin.template:
+    src: backup-vault.j2
+    dest: /usr/local/bin/backup-vault
+    owner: root
+    group: "{{ rclone_personal_vault_group }}"
+    mode: "2755"
+- name: Ensuring backup folder has appropriate permissions
+  become: true
+  ansible.builtin.file:
+    path: "{{ rclone_personal_vault_dir }}/backup"
+    state: directory
+    mode: "2770"
+    group: "{{ rclone_personal_vault_group }}"
+    owner: root
 - name: Reloading services
   become: true
   ansible.builtin.systemd_service:
     daemon_reload: true
-- name: Starting service for users
+- name: Enabling the service
   become: true
   ansible.builtin.systemd_service:
-    state: restarted
+    enabled: true
+    name: rclone_personal_vault@{{ item }}.service
+  loop: "{{ rclone_personal_vault_users }}"
+- name: Starting the service
+  become: true
+  ansible.builtin.systemd_service:
+    state: started
     name: rclone_personal_vault@{{ item }}.service
   loop: "{{ rclone_personal_vault_users }}"

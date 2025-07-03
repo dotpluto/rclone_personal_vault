@@ -51,6 +51,14 @@
     owner: root
     group: "{{ rclone_personal_vault_group }}"
     mode: "2755"
+- name: Adding management script to /usr/local/bin
+  become: true
+  ansible.builtin.template:
+    src: "rclone_personal_vault_ctl.j2"
+    dest: /usr/local/bin/rclone_personal_vault_ctl
+    owner: root
+    group: "{{ rclone_personal_vault_group }}"
+    mode: "2555"
 - name: Ensuring backup folder has appropriate permissions
   become: true
   ansible.builtin.file:
